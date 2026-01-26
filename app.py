@@ -344,6 +344,92 @@ def register():
     }), 403
 
 
+@app.route('/api/auth/init-admin', methods=['POST'])
+def init_admin():
+    """
+    Создание первого администратора (только если база пустая)
+    POST /api/auth/init-admin
+    Body: {
+        "secret_key": "12345",
+        "username": "polina",
+        "password": "123",
+        "email": "polina@agm.local"
+    }
+    
+    ⚠️ ВАЖНО: Используйте только один раз для создания первого пользователя!
+    После создания первого пользователя этот endpoint автоматически отключится.
+    """
+    try:
+        # Проверяем, есть ли уже пользователи
+        existing_users = User.query.all()
+        if existing_users:
+            return jsonify({
+                "success": False,
+                "error": "Пользователи уже существуют. Используйте /api/auth/login для входа."
+            }), 403
+        
+        # Проверяем секретный ключ
+        data = request.get_json()
+        provided_secret = data.get('secret_key', '')
+        expected_secret = os.environ.get('INIT_ADMIN_SECRET') or os.environ.get('SECRET_KEY', '')
+        
+        if not provided_secret or provided_secret != expected_secret:
+            return jsonify({
+                "success": False,
+                "error": "Неверный секретный ключ"
+            }), 401
+        
+        # Получаем данные пользователя
+        username = data.get('username', 'polina').strip()
+        password = data.get('password', '123')
+        email = data.get('email', f'{username}@agm.local').strip()
+        
+        if not username or not password:
+            return jsonify({
+                "success": False,
+                "error": "Имя пользователя и пароль обязательны"
+            }), 400
+        
+        # Проверяем, не существует ли уже такой пользователь
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            return jsonify({
+                "success": False,
+                "error": f"Пользователь '{username}' уже существует"
+            }), 400
+        
+        # Создаем администратора
+        user = User(
+            username=username,
+            email=email,
+            is_admin=True
+        )
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        print(f"✅ Администратор '{username}' создан успешно!")
+        
+        return jsonify({
+            "success": True,
+            "message": f"Администратор '{username}' создан успешно!",
+            "user": {
+                "username": user.username,
+                "email": user.email,
+                "is_admin": user.is_admin
+            }
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка создания администратора: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Ошибка создания пользователя: {str(e)}"
+        }), 500
+
+
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     """
