@@ -303,7 +303,7 @@ def get_client_info():
     """
     client_ip = get_client_ip()
     # IP-адреса, для которых нужно показывать котов
-    cat_ips = ['192.168.88.180', '192.168.88.105', '192.168.88.162', '192.168.88.137', '127.0.0.1', 'localhost']
+    cat_ips = ['192.168.88.180', '192.168.88.105', '192.168.88.162', '192.168.88.137']
     show_cats = client_ip in cat_ips
     
     # Логирование для отладки
@@ -370,6 +370,12 @@ def init_admin():
         
         # Проверяем секретный ключ
         data = request.get_json()
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "Не получены данные. Убедитесь, что отправляете JSON с Content-Type: application/json"
+            }), 400
+        
         provided_secret = data.get('secret_key', '')
         expected_secret = os.environ.get('INIT_ADMIN_SECRET') or os.environ.get('SECRET_KEY', '')
         
