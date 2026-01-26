@@ -59,6 +59,32 @@ def load_user(user_id):
 # Создание таблиц БД при первом запуске
 with app.app_context():
     db.create_all()
+    
+    # Автоматическое создание пользователя polina, если его нет
+    polina_user = User.query.filter_by(username='polina').first()
+    if not polina_user:
+        polina = User(
+            username='polina',
+            email='polina@agm.local',
+            is_admin=True
+        )
+        polina.set_password('123')
+        db.session.add(polina)
+        db.session.commit()
+        print("✅ Пользователь 'polina' создан автоматически (пароль: 123)")
+    
+    # Автоматическое создание пользователя polina, если его нет
+    polina_user = User.query.filter_by(username='polina').first()
+    if not polina_user:
+        polina = User(
+            username='polina',
+            email='polina@agm.local',
+            is_admin=True
+        )
+        polina.set_password('123')
+        db.session.add(polina)
+        db.session.commit()
+        print("Пользователь 'polina' создан автоматически (пароль: 123)")
 
 
 # ============= ПОЛУЧЕНИЕ IP-АДРЕСА КЛИЕНТА =============
@@ -356,7 +382,7 @@ def init_admin():
         "email": "polina@agm.local"
     }
     
-    ⚠️ ВАЖНО: Используйте только один раз для создания первого пользователя!
+    ВАЖНО: Используйте только один раз для создания первого пользователя!
     После создания первого пользователя этот endpoint автоматически отключится.
     """
     try:
@@ -1933,7 +1959,7 @@ if __name__ == '__main__':
     print(f"   🌐 В локальной сети: http://{local_ip}:5000/")
     
     print("\n📋 Основные страницы:")
-    print("   🌐 /select.html   - Подбор насоса")
+    print("   /select.html   - Подбор насоса")
     print("   🌐 /calc.html     - Расчёт трубопровода")
     print("   🌐 /result.html   - Результаты")
     print("   🌐 /login.html    - Вход/Регистрация")
