@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подбор насоса</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+            font-weight: 300;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Bold.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        :root {
+            --primary: #0CA5C4;
+            --primary-dark: #007eb3;
+            --accent: #888585;
+            --text: #333333;
+            --text-light: #777777;
+            --bg: #F5F7FA;
+            --card: #FFFFFF;
+            --border: #E0E0E0;
+        }
+        
+        body {
+            font-family: 'TTWellingtons', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            position: relative;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 2rem;
+        }
+        
+        .header-wrapper h1 {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0 !important;
+            margin-block-start: 0 !important;
+            margin-block-end: 0 !important;
+            margin-inline-start: 0 !important;
+            margin-inline-end: 0 !important;
+            font-weight: 600 !important;
+            font-size: 1.6rem !important;
+            letter-spacing: 0.5px;
+            display: block !important;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+        }
+        
+        .header-logo {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            pointer-events: auto;
+        }
+        
+        .header-logo:hover {
+            opacity: 0.8;
+        }
+        
+        .header-logo svg {
+            width: 80px;
+            height: auto;
+        }
+        
+        .header-logo svg path {
+            fill: white;
+        }
+        
+        .back-button {
+            position: absolute;
+            right: 5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent;
+            color: rgba(255, 255, 255, 1);
+            border: 1px solid rgba(255, 255, 255, 1);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Виджет авторизации */
+        .auth-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            margin-left: auto;
+        }
+
+        .auth-widget .user-name {
+            color: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .auth-widget .auth-btn {
+            padding: 10px 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            min-width: 100px;
+            text-align: center;
+            box-sizing: border-box;
+            height: 40px;
+            line-height: 20px;
+            margin-right: -8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-widget .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .auth-widget .logout-btn {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        
+        .container {
+            max-width: 900px;
+            width: 90%;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .container:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        #result {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(255, 243, 224, 0.95);
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #888585;
+            margin-bottom: 1.5rem;
+            display: none;
+            backdrop-filter: blur(4px);
+            border-bottom: 1px solid rgba(230, 81, 0, 0.2);
+            animation: fadeIn 0.3s ease-out;
+            border-radius: 6px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        
+        .input-group {
+            margin-bottom: 0;
+        }
+.reset-sort-btn {
+            background-color: transparent;
+            color: rgba(255, 255, 255, 1);
+            border: 1px solid rgba(255, 255, 255, 1);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+        }
+        .reset-sort-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            background-color: var(--card);
+            box-sizing: border-box;
+            max-width: 250px;
+        }
+        
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 156, 217, 0.1);
+        }
+        
+        select option:disabled {
+            color: #999;
+            background-color: #f5f5f5;
+            font-style: italic;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-width: 160px;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        #resetBtn, #toggleChartBtn {
+            background-color: var(--card);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        #resetBtn:hover, #toggleChartBtn:hover {
+            background-color: rgba(0, 156, 217, 0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin: 30px 0;
+            background-color: transparent;
+            padding: 0;
+            display: none;
+        }
+        
+        .results-container {
+            width: 100%;
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .results-table-wrapper {
+            width: 100%;
+            overflow-x: visible;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0 auto;
+            max-width: 1000px;
+            table-layout: fixed;
+        }
+        
+        .results-table th {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.7rem 0.8rem;
+            text-align: left;
+            cursor: pointer;
+            position: relative;
+            font-weight: 500;
+            font-size: 0.8rem;
+            transition: background-color 0.2s;
+        }
+        
+        .results-table th:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .sortable::after {
+            content: "↕";
+            margin-left: 8px;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        .sort-asc::after {
+            content: "↑";
+            opacity: 1;
+        }
+        
+        .sort-desc::after {
+            content: "↓";
+            opacity: 1;
+        }
+        
+        .results-table th:first-child {
+            border-top-left-radius: 6px;
+            width: 30%; 
+	align-items: center;
+        }
+        
+        .results-table th:nth-child(2) {
+            width: 15%; 
+	align-items: center;
+        }
+        
+        .results-table th:nth-child(3) {
+            width: 12%; 
+	align-items: center;
+        }
+        
+        .results-table th:nth-child(4) {
+            width: 10%;
+	align-items: center;
+        }
+
+        .results-table th:nth-child(5) {
+            width: 12%;
+        }
+        
+        .results-table th:last-child {
+            border-top-right-radius: 6px;
+            width: 21%;
+        }
+        
+        .results-table td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+	align-items: center;
+        }
+        
+        .results-table td:first-child {
+            font-size: 0.75rem;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        .results-table td:last-child {
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
+        }
+        
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .results-table tr:hover td {
+            background-color: rgba(0, 156, 217, 0.03);
+        }
+        
+        .view-btn {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+        
+        .view-btn:hover {
+            background-color: rgba(0, 156, 217, 0.1);
+        }
+        
+        .small-button {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.8rem;
+            min-width: auto;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 992px) {
+            .form-container {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            input[type="number"], select {
+                max-width: 100%;
+            }
+            
+            .results-table {
+                table-layout: auto;
+            }
+            
+            .results-table th:first-child,
+            .results-table th:nth-child(2),
+            .results-table th:nth-child(3),
+            .results-table th:nth-child(4),
+            .results-table th:last-child {
+                width: auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-wrapper {
+                padding: 0 1rem;
+                flex-wrap: wrap;
+                min-height: 60px;
+            }
+            
+            .header-wrapper h1,
+            .header h1,
+            div.header-wrapper h1,
+            div.header h1 {
+                position: relative !important;
+                left: auto !important;
+                transform: none !important;
+                width: 100% !important;
+                font-size: 1.1rem !important;
+                line-height: 1.3 !important;
+                padding: 0.5rem 0 !important;
+                margin: 0 !important;
+                margin-block-start: 0 !important;
+                margin-block-end: 0 !important;
+                margin-inline-start: 0 !important;
+                margin-inline-end: 0 !important;
+                font-weight: 600 !important;
+                letter-spacing: 0.3px !important;
+                display: block !important;
+                unicode-bidi: isolate !important;
+                text-align: center !important;
+                order: 1;
+            }
+            
+            .auth-widget {
+                position: relative !important;
+                margin-left: 0 !important;
+                margin-top: 0.5rem;
+                width: 100%;
+                justify-content: center;
+                order: 2;
+                flex-wrap: nowrap;
+                gap: 8px;
+            }
+            
+            .auth-widget .auth-btn {
+                min-width: 140px !important;
+                padding: 8px 10px !important;
+                font-size: 0.85rem !important;
+                white-space: normal;
+                word-wrap: break-word;
+                height: auto !important;
+                min-height: 40px;
+                line-height: 1.3 !important;
+                margin-right: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
+            .auth-widget .logout-btn {
+                min-width: 80px !important;
+                padding: 8px 8px !important;
+            }
+            
+            .auth-widget .user-name {
+                font-size: 0.85rem !important;
+                margin-right: 8px;
+                width: auto;
+                text-align: left;
+                margin-bottom: 0;
+            }
+            
+            .header-logo {
+                position: absolute;
+                left: 0.5rem;
+                top: 0.5rem;
+                transform: none;
+                width: 50px;
+            }
+            
+            .header-logo svg {
+                width: 50px;
+            }
+            
+            .container {
+                padding: 1rem;
+                margin: 1rem;
+                width: calc(100% - 2rem);
+                box-sizing: border-box;
+                overflow-x: hidden;
+            }
+            
+            .form-container {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+            
+            .form-column {
+                gap: 1.2rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+            
+            .results-container {
+                width: 100%;
+                overflow-x: hidden;
+            }
+            
+            #searchContainer {
+                margin-bottom: 1rem !important;
+                padding: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                text-align: left !important;
+            }
+            
+            #searchContainer > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            
+            #searchContainer label {
+                text-align: left !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+            
+            #searchContainer input {
+                min-width: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            
+            #searchContainer button {
+                width: 100% !important;
+            }
+            
+            .results-table-wrapper {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -1rem;
+                padding: 0 1rem;
+            }
+            
+            .results-table {
+                font-size: 0.8rem;
+                min-width: 600px;
+            }
+            
+            .results-table td {
+                white-space: normal;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-wrapper">
+            <h1>Подбор насосного оборудования</h1>
+            
+            <!-- Виджет авторизации -->
+            <div id="authWidget" class="auth-widget" style="display: none;">
+                <span id="authUserName" class="user-name"></span>
+                <button id="logoutBtn" class="auth-btn logout-btn">Выйти</button>
+                <a href="/saved.html" class="auth-btn" style="text-decoration: none;">Мои результаты</a>
+            </div>
+            <div id="loginWidget" class="auth-widget" style="display: none;">
+                <a href="/login.html" class="auth-btn" style="text-decoration: none;">Войти</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="result"></div>
+        
+        <div class="form-container">
+            <div class="form-column">
+                <div class="input-group">
+                    <label for="pointX">Подача, м³/ч</label>
+                    <input type="number" id="pointX" step="any" placeholder="Введите значение">
+                </div>
+                
+                <div class="input-group">
+                    <label for="pointY">Напор, м</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="pointY" step="any" placeholder="Введите значение">
+                        <button id="calculateHeadBtn" type="button" class="small-button">
+                            Рассчитать
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="density">Плотность, кг/м³</label>
+                    <input type="number" id="density" step="any" placeholder="Введите значение" value="1000" min="1000">
+                </div>
+            </div>
+
+            <div class="form-column">
+                <div class="input-group">
+                    <label for="staticHead">Статический напор, м</label>
+                    <input type="number" id="staticHead" step="any" placeholder="Введите значение" value="0">
+                </div>
+                
+                <div class="input-group">
+                    <label for="pumpType">Тип насоса</label>
+                    <select id="pumpType">
+                        <option value="sewage" selected>Канализационный</option>
+                        <option value="sludge">Шламовый</option>
+                        <option value="drainage">Дренажный</option>
+                    </select>
+                </div>
+
+            </div>
+            
+            <div class="form-column">
+                <div class="input-group">
+                    <label for="material">Материальное исполнение</label>
+                    <select id="material">
+                        <option value="чугун" selected>Чугун</option>
+                        <option value="высокохромистый чугун">Высокохромистый чугун</option>
+                        <option value="нержавеющая сталь">Нержавеющая сталь</option>
+                        <option value="алюминий">Алюминий</option>
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="explosionProof">Взрывозащита</label>
+                        <select id="explosionProof">
+                            <option value="нет" selected>Нет</option>
+                            <option value="да">Да</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="insulationClass">Класс изоляции</label>
+                        <select id="insulationClass">
+                            <option value="F" selected>F</option>
+                            <option value="H">H</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="cableLength">Длина кабеля, м</label>
+                        <select id="cableLength">
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="voltage">Напряжение, В</label>
+                        <select id="voltage">
+                            <option value="380" selected>380</option>
+                            <option value="660">660</option>
+                            <option value="1140">1140</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="calculateBtn">Подобрать насос</button>
+            <button id="resetBtn">Сбросить</button>
+            <button id="directSelectBtn">Прямой выбор</button>
+        </div>
+        
+        <div class="results-container" id="resultsContainer">
+            <h3 style="text-align: center; margin-bottom: 1rem;">Результаты подбора:</h3>
+            
+            <div id="searchContainer" style="display: none; margin-bottom: 1rem; text-align: center;">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label for="pumpSearch" style="margin: 0; font-weight: 500;">Поиск по названию:</label>
+                        <input type="text" id="pumpSearch" placeholder="Введите название насоса" 
+                               style="padding: 0.5rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; min-width: 300px;">
+                        <button id="clearSearchBtn" class="small-button" style="background-color: var(--card); color: var(--primary); border: 1px solid var(--primary);">
+                            Очистить
+                        </button>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div id="poleFilterContainer" style="display: none; margin-bottom: 1rem; text-align: center; padding: 0.25rem; background-color: var(--card); border-radius: 6px; border: 1px solid var(--border);">
+                <div style="margin-bottom: 0.5rem; font-weight: 400;">Фильтр по количеству полюсов:</div>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="pole2" class="pole-filter" value="2" checked>
+                        2
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="pole4" class="pole-filter" value="4" checked>
+                        4
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="pole6" class="pole-filter" value="6" checked>
+                        6
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="pole8" class="pole-filter" value="8" checked>
+                        8
+                    </label>
+                </div>
+            </div>
+            
+            <div class="results-table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="name">Насос</th>
+                            <th class="sortable" data-sort="flow">Подача, м³/ч</th>
+                            <th class="sortable" data-sort="head">Напор, м</th>
+                            <th class="sortable" data-sort="efficiency">КПД, %</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        let pumpVariants = [];
+        let pumpWeights = {};
+        let pumpDimensions = {};
+        let parabolaChart;
+        let userPoint = null;
+        let systemParabola = null;
+        let intersectionPoints = [];
+        let isDirectMode = false;
+        let currentSort = { column: null, direction: 'asc' };
+        const EFFICIENCY_WEIGHT = 0.4;
+        const DISTANCE_WEIGHT = 0.3;
+        const POWER_WEIGHT = 0.3; // теперь используем для массы
+        let allPumps = [];
+
+        window.pumpParabolas = [];
+
+        async function loadPumpParabolas() {
+            try {
+                const response = await fetch('data.json');
+                if (!response.ok) throw new Error('Ошибка загрузки данных');
+
+                const data = await response.json();
+                window.pumpParabolas = data.pumpParabolas;
+                
+                // Функция для пересчета коэффициентов параболы КПД через ноль и точку оптимума
+                function recalculateEfficiencyThroughZero(pump) {
+                    if (!pump.efficiency || !pump.controlPoint) return;
+                    
+                    // Вычисляем значение КПД в точке оптимума из исходной параболы
+                    const optX = pump.controlPoint.x;
+                    const effMax = pump.efficiency.a * optX * optX + pump.efficiency.b * optX + pump.efficiency.c;
+                    
+                    // Пересчитываем коэффициенты так, чтобы парабола проходила через (0, 0) и (optX, effMax)
+                    // с максимумом в точке optX
+                    // Условия: eff(0) = 0 → c = 0
+                    //          eff(optX) = effMax → a*optX² + b*optX = effMax
+                    //          максимум в optX → 2*a*optX + b = 0 → b = -2*a*optX
+                    // Решение: a = -effMax / optX², b = 2*effMax / optX
+                    if (optX > 0) {
+                        pump.efficiency.a = -effMax / (optX * optX);
+                        pump.efficiency.b = 2 * effMax / optX;
+                        pump.efficiency.c = 0;
+                    }
+                }
+
+                window.pumpParabolas.forEach(pump => {
+                    if (pump.efficiency && pump.efficiency.c !== 0) {
+                        recalculateEfficiencyThroughZero(pump);
+                    }
+                });
+                try {
+                    if (Array.isArray(data.motors)) {
+                        sessionStorage.setItem('motors', JSON.stringify(data.motors));
+                        console.log('Сохранены motors в sessionStorage:', data.motors.length);
+                    }
+                } catch (e) {
+                    console.warn('Не удалось сохранить motors в sessionStorage:', e);
+                }
+
+                console.log('Загружено pumpParabolas:', window.pumpParabolas);
+
+
+                await loadPumpVariants();
+
+
+                addPumpVariants();
+                await loadPumpVariants1();
+                await loadPumpVariants2();
+
+                extendTrimmedPumpData();
+
+
+
+
+            } catch (error) {
+                console.error('Ошибка загрузки данных насосов:', error);
+            }
+        }
+
+
+        async function loadPumpVariants() {
+            try {
+                const res = await fetch('data.json');
+                if (!res.ok) throw new Error('Ошибка загрузки');
+                const data = await res.json();
+
+
+                pumpVariants = data.pumpVariants || [];
+
+                console.log('Загружено pumpVariants:', pumpVariants);
+
+            } catch (err) {
+                console.error('Ошибка загрузки pumpVariants:', err);
+            }
+        }
+
+        function addPumpVariants() {
+            pumpVariants.forEach(variant => {
+                const basePump = window.pumpParabolas.find(p => p.name === variant.baseName);
+                if (basePump) {
+                    const Qopt_trim = variant.x;
+                    const Hopt_trim = variant.y;
+                    const a_new = basePump.a;
+                    const b_new = basePump.b;
+
+                    const c_new = Hopt_trim - (a_new * Qopt_trim * Qopt_trim + b_new * Qopt_trim);
+                    const newPump = {
+                        name: `${basePump.name} (${variant.diameter}mm)`,
+                        a: a_new,
+                        b: b_new,
+                        c: c_new,
+                        bounds: { 
+                            x1: Math.max(0, basePump.bounds.x1), 
+                            x2: Math.min(1700, basePump.bounds.x2) 
+                        },
+                        color: variant.color,
+                        efficiency: {
+                            a: -variant.efficiency / (variant.x * variant.x),
+                            b: 2 * variant.efficiency / variant.x,
+                            c: 0
+                        },
+                        controlPoint: { x: variant.x, y: variant.y },
+                        diameter: variant.diameter !== undefined ? variant.diameter : (basePump.diameter !== undefined ? basePump.diameter : undefined),
+                        p: basePump.p !== undefined ? basePump.p : undefined,
+                        isTrimmedVariant: true
+                    };
+                    window.pumpParabolas.push(newPump);
+
+                    const pumpNumber = window.pumpParabolas.length - 1;
+                    if (newPump.isTrimmedVariant) {
+                        console.info('[TRIMMED-vertical][select.html] pumpNumber:', pumpNumber, 'name:', newPump.name, 'a:', newPump.a, 'b:', newPump.b, 'c:', newPump.c, 'controlPoint:', newPump.controlPoint);
+                    }
+                }
+            });
+
+
+            const trimmed = window.pumpParabolas.map((p, i) => p.isTrimmedVariant ? {pumpNumber: i, name: p.name, a: p.a, b: p.b, c: p.c, controlPoint: p.controlPoint} : null).filter(Boolean);
+            console.info('[TRIMMED][select.html] trimmed pumps array:', trimmed);
+        }
+
+
+        async function loadPumpVariants1() {
+            try {
+                const res = await fetch('data.json');
+                if (!res.ok) throw new Error('Ошибка загрузки');
+                const data = await res.json();
+
+
+                pumpDimensions = data.pumpDimensions || [];
+
+                console.log('Загружено pumpDimensions:', pumpDimensions);
+
+            } catch (err) {
+                console.error('Ошибка загрузки pumpDimensions:', err);
+            }
+        }
+
+        async function loadPumpVariants2() {
+            try {
+                const res = await fetch('data.json');
+                if (!res.ok) throw new Error('Ошибка загрузки');
+                const data = await res.json();
+
+
+                pumpWeights = data.pumpWeights || [];
+
+                console.log('Загружено pumpWeights:', pumpWeights);
+
+            } catch (err) {
+                console.error('Ошибка загрузки pumpWeights:', err);
+            }
+        }
+
+        function extendTrimmedPumpData() {
+            window.pumpParabolas.forEach(pump => {
+                if (pump.isTrimmedVariant && pump.name.includes('(')) {
+                    const baseName = pump.name.split('(')[0].trim();
+                    if (pumpDimensions[baseName]) {
+                        pumpDimensions[pump.name] = pumpDimensions[baseName];
+                    }
+                    if (pumpWeights[baseName]) {
+                        pumpWeights[pump.name] = pumpWeights[baseName];
+                    }
+                }
+            });
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            document.getElementById('calculateHeadBtn').addEventListener('click', function() {
+                const features = 'width=900,height=700,scrollbars=yes';
+                window.open('calc.html', 'pipelineCalculator', features);
+            });
+
+            document.getElementById('calculateBtn').addEventListener('click', () => { isDirectMode = false; calculatePumps(); });
+            document.getElementById('resetBtn').addEventListener('click', resetChart);
+            document.getElementById('directSelectBtn').addEventListener('click', () => { isDirectMode = true; buildDirectList(); });
+            
+            document.getElementById('density').addEventListener('input', function() {
+                const density = parseFloat(this.value);
+                const pumpTypeEl = document.getElementById('pumpType');
+                if (density > 1050) {
+                    pumpTypeEl.value = 'sludge';
+                }
+            });
+
+            
+
+            document.getElementById('pumpSearch').addEventListener('input', filterPumps);
+            document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
+            
+            document.querySelectorAll('.pole-filter').forEach(checkbox => {
+                checkbox.addEventListener('change', filterPumps);
+            });
+
+
+            document.querySelectorAll('.results-table th[data-sort]').forEach(th => {
+                th.addEventListener('click', function() {
+                    const column = this.getAttribute('data-sort');
+                    sortTable(column);
+                });
+                th.title = 'Нажмите для сортировки';
+            });
+
+
+            loadPumpParabolas().then(() => {
+                extendTrimmedPumpData();
+                console.log('pumpWeights before save:', pumpWeights);
+                console.log('pumpDimensions before save:', pumpDimensions);
+                console.log('trimmed names:', window.pumpParabolas.filter(p=>p.isTrimmedVariant).map(p=>p.name));
+                sessionStorage.setItem('pumpParabolas', JSON.stringify(window.pumpParabolas));
+                sessionStorage.setItem('pumpWeights', JSON.stringify(pumpWeights));
+                sessionStorage.setItem('pumpDimensions', JSON.stringify(pumpDimensions));
+            });
+
+            const pumpTypeEl = document.getElementById('pumpType');
+            if (pumpTypeEl) {
+                pumpTypeEl.addEventListener('change', () => {
+                    if (isDirectMode) {
+                        buildDirectList();
+                    } else if (userPoint) {
+                        calculatePumps();
+                    }
+                });
+            }
+
+
+            const materialEl = document.getElementById('material');
+            const explosionProofEl = document.getElementById('explosionProof');
+            
+            function updateExplosionProofOptions() {
+                const selectedMaterial = materialEl.value;
+                const explosionOptions = explosionProofEl.querySelectorAll('option');
+                
+                explosionOptions.forEach(option => {
+                    if (option.value === 'да') {
+                        option.disabled = selectedMaterial === 'алюминий';
+                        if (option.disabled && explosionProofEl.value === 'да') {
+                            explosionProofEl.value = 'нет';
+                        }
+                    }
+                });
+            }
+            
+            function updateMaterialOptions() {
+                const selectedExplosionProof = explosionProofEl.value;
+                const materialOptions = materialEl.querySelectorAll('option');
+                
+                materialOptions.forEach(option => {
+                    if (option.value === 'алюминий') {
+                        option.disabled = selectedExplosionProof === 'да';
+                        if (option.disabled && materialEl.value === 'алюминий') {
+                            materialEl.value = 'чугун';
+                        }
+                    }
+                });
+            }
+            
+            materialEl.addEventListener('change', updateExplosionProofOptions);
+            explosionProofEl.addEventListener('change', function() {
+                updateMaterialOptions();
+                // Обновляем таблицу, если она уже отображается
+                if (intersectionPoints && intersectionPoints.length > 0) {
+                    showResults();
+                }
+            });
+            
+            // Обновляем таблицу при изменении типа насоса (используем уже существующую переменную)
+            if (pumpTypeEl) {
+                const existingHandler = pumpTypeEl.onchange;
+                pumpTypeEl.addEventListener('change', function() {
+                    // Вызываем существующий обработчик, если он есть
+                    if (existingHandler) existingHandler();
+                    // Обновляем таблицу, если она уже отображается
+                    if (intersectionPoints && intersectionPoints.length > 0) {
+                        showResults();
+                    }
+                });
+            }
+
+            updateExplosionProofOptions();
+            updateMaterialOptions();
+        });
+
+
+       window.addEventListener('message', (event) => {
+            if (event.data?.type === 'pumpCalculationResult') {
+                const result = event.data.data;
+                
+
+                let flowRate = parseFloat(result.flowRate);
+                if (result.flowUnit === 'ls') {
+                    flowRate = flowRate * 3.6;
+                }
+                
+
+                document.getElementById('pointX').value = flowRate.toFixed(2);
+                document.getElementById('pointY').value = result.headPerPump;
+                document.getElementById('staticHead').value = result.staticHead;
+                
+
+                document.querySelector('label[for="pointX"]').textContent = 'Подача, м³/ч';
+                
+
+                showResult(
+                    `Получены данные расчета: подача ${flowRate.toFixed(2)} м³/ч, ` +
+                    `напор ${result.headPerPump} м, статический напор ${result.staticHead} м`, 
+                    false
+                );
+            }
+        });
+
+        function toggleChart() {
+            const chartContainer = document.querySelector('.chart-container');
+            const toggleChartBtn = document.getElementById('toggleChartBtn');
+            if (chartContainer.style.display === 'none') {
+                chartContainer.style.display = 'block';
+                toggleChartBtn.textContent = 'Скрыть график';
+            } else {
+                chartContainer.style.display = 'none';
+                toggleChartBtn.textContent = 'Показать график';
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('parabolaChart').getContext('2d');
+            
+
+            let maxHead = 0;
+            window.pumpParabolas.forEach(parabola => {
+                const data = generateParabolaData(parabola);
+                data.forEach(point => {
+                    if (point.y > maxHead) maxHead = point.y;
+                });
+            });
+            
+
+            const yMax = Math.ceil(maxHead * 1.2);
+            
+            const datasets = window.pumpParabolas.map((parabola, index) => {
+                const data = generateParabolaData(parabola);
+                const ds = {
+                    label: parabola.name,
+                    data: data,
+                    borderColor: parabola.color,
+                    backgroundColor: parabola.color,
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    showLine: true,
+                    tension: 0.1,
+                    borderCapStyle: 'round',
+                    borderJoinStyle: 'round'
+                };
+
+                if (parabola.isTrimmedVariant && parabola.controlPoint) {
+                    ds.pointData = [{x: parabola.controlPoint.x, y: parabola.controlPoint.y}];
+                }
+                return ds;
+            });
+
+            window.pumpParabolas.forEach(parabola => {
+                if (parabola.isTrimmedVariant && parabola.controlPoint) {
+                    datasets.push({
+                        label: 'Точка оптимума ' + parabola.name,
+                        data: [{x: parabola.controlPoint.x, y: parabola.controlPoint.y}],
+                        borderColor: '#4169E1',
+                        backgroundColor: '#4169E1',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        showLine: false
+                    });
+                }
+            });
+            parabolaChart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            type: 'linear', 
+                            position: 'bottom', 
+                            title: { 
+                                display: true, 
+                                text: 'Подача, м³/ч',
+                                font: { family: 'TTWellingtons', size: 14, weight: 500 },
+                                color: '#555'
+                            },
+                            min: 0,
+                            max: 1700,
+                            grid: { color: 'rgba(0, 0, 0, 0.05)', drawTicks: false },
+                            ticks: { stepSize: 100, font: { family: 'TTWellingtons', size: 12 } }
+                        },
+                        y: { 
+                            type: 'linear', 
+                            position: 'left', 
+                            title: { 
+                                display: true, 
+                                text: 'Напор, м',
+                                font: { family: 'TTWellingtons', size: 14, weight: 500 },
+                                color: '#555'
+                            },
+                            min: 0,
+                            max: yMax,
+                            grid: { color: 'rgba(0, 0, 0, 0.05)', drawTicks: false },
+                            ticks: { 
+                                stepSize: Math.ceil(yMax / 10),
+                                font: { family: 'TTWellingtons', size: 12 } 
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) {
+                                        label += `${context.parsed.x.toFixed(2)} м³/ч, ${context.parsed.y.toFixed(2)} м`;
+                                    }
+                                    return label;
+                                }
+                            },
+                            displayColors: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: { family: 'TTWellingtons', size: 14 },
+                            bodyFont: { family: 'TTWellingtons', size: 13 }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { family: 'TTWellingtons', size: 12 },
+                                padding: 20,
+                                usePointStyle: false,
+                                boxWidth: 12,
+                                boxHeight: 1,
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    return labels.filter(label => {
+                                        const dataset = chart.data.datasets[label.datasetIndex];
+                                        return (dataset.pointRadius === 0 && !dataset.label.includes('Парабола системы')) ||
+                                               dataset.label.includes('Заданные параметры');
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    elements: { line: { tension: 0.1 } }
+                }
+            });
+        }
+
+        function generateParabolaData(parabola) {
+    const data = [];
+    const step = 10;
+    const startX = Math.max(0, parabola.bounds.x1);
+    const endX = Math.min(1700, parabola.bounds.x2);
+    for (let x = startX; x <= endX; x += step) {
+        const y = parabola.a * x * x + parabola.b * x + parabola.c;
+
+        let eff = 100;
+        if (parabola.efficiency) {
+            eff = parabola.efficiency.a * x * x + parabola.efficiency.b * x + parabola.efficiency.c;
+        }
+        if (!isNaN(y) && eff > 0) {
+            data.push({x: x, y: y});
+        }
+    }
+    return data;
+}
+
+        function calculateSystemParabola(userPoint, staticHead) {
+            const a = (userPoint.y - staticHead) / (userPoint.x * userPoint.x);
+            return { a, b: 0, c: staticHead };
+        }
+
+        function findIntersection(systemParabola, pumpParabola) {
+            let a = pumpParabola.a;
+            let b = pumpParabola.b;
+            let c = pumpParabola.c;
+
+            if (!pumpParabola.isTrimmedVariant && pumpParabola.controlPoint) {
+                const currentY = a * pumpParabola.controlPoint.x * pumpParabola.controlPoint.x + b * pumpParabola.controlPoint.x + c;
+                const deltaY = pumpParabola.controlPoint.y - currentY;
+                c = c + deltaY;
+            }
+            if (systemParabola.a === a && systemParabola.b === b) return null;
+            const A = systemParabola.a - a;
+            const B = systemParabola.b - b;
+            const C = systemParabola.c - c;
+            const discriminant = B * B - 4 * A * C;
+            if (discriminant < 0) return null;
+            const sqrtDiscriminant = Math.sqrt(discriminant);
+            const x1 = (-B + sqrtDiscriminant) / (2 * A);
+            const x2 = (-B - discriminant) / (2 * A);
+            const validPoints = [x1, x2].filter(x => x >= pumpParabola.bounds.x1 && x <= pumpParabola.bounds.x2 && x >= 0);
+            if (validPoints.length === 0) return null;
+            const x = Math.min(...validPoints);
+            const y = a * x * x + b * x + c;
+            return { x, y };
+        }
+
+        function calculateEfficiency(pump, flow) {
+            const eff = pump.efficiency.a * flow * flow + pump.efficiency.b * flow + pump.efficiency.c;
+            return Math.max(0, Math.min(100, eff));
+        }
+
+
+        function calculateMotorPowerKw(pump, flow_m3h, head_m, efficiency_percent) {
+            if (!isFinite(flow_m3h) || !isFinite(head_m) || !isFinite(efficiency_percent) || efficiency_percent <= 0) return null;
+            const rho = parseFloat(document.getElementById('density')?.value) || 1000;
+            const g = 9.81;
+            const flow_m3s = flow_m3h / 3600;
+            const hydraulicPowerW = rho * g * head_m * flow_m3s;
+            const shaftPowerW = hydraulicPowerW / (efficiency_percent / 100);
+            let powerKw = shaftPowerW / 1000;
+            
+
+            if (powerKw > 90) {
+                powerKw *= 1.1;
+            } else if (powerKw >= 9) {
+                powerKw *= 1.1;
+            } else {
+                powerKw *= 1.25;
+            }
+
+            const rated = [1.1,1.5,2.2,3,4,5.5,7.5,9,11,15,18.5,22,30,37,45,55,75,90,110,132,160,200,250,315];
+            for (let i = 0; i < rated.length; i++) {
+                if (powerKw <= rated[i]) return rated[i];
+            }
+            return rated[rated.length - 1];
+        }
+
+        function calculatePumps() {
+            if (isDirectMode) { buildDirectList(); return; }
+            const pointX = parseFloat(document.getElementById('pointX').value);
+            const pointY = parseFloat(document.getElementById('pointY').value);
+            const staticHead = parseFloat(document.getElementById('staticHead').value);
+            if (isNaN(pointX)) {
+                showResult("Пожалуйста, введите корректное значение расхода", true);
+                return;
+            }
+            if (isNaN(pointY)) {
+                showResult("Пожалуйста, введите корректное значение напора", true);
+                return;
+            }
+            if (isNaN(staticHead)) {
+                showResult("Пожалуйста, введите корректное значение статического напора", true);
+                return;
+            }
+            if (pointX <= 0) {
+                showResult("Расход должен быть больше 0", true);
+                return;
+            }
+            if (pointY <= staticHead) {
+                showResult("Напор должен быть больше статического напора", true);
+                return;
+            }
+            if (!Array.isArray(window.pumpParabolas)) {
+                showResult("Данные о насосах еще не загружены", true);
+                return;
+            }
+            
+            userPoint = { x: pointX, y: pointY };
+            systemParabola = calculateSystemParabola(userPoint, staticHead);
+            intersectionPoints = [];
+            
+            window.pumpParabolas.forEach(pump => {
+                const pumpType = (document.getElementById('pumpType')?.value) || 'sewage';
+                const name = String(pump.name || '');
+                const isSludge = name.includes('ШлП');
+                const isDrainage = name.includes('ДнП');
+                if (pumpType === 'sludge' && !isSludge) return;
+                if (pumpType === 'drainage' && !isDrainage) return;
+                if (pumpType === 'sewage' && (isSludge || isDrainage)) return;
+                const minPower = parseFloat(document.getElementById('powerMin')?.value) || 0;
+                const intersection = findIntersection(systemParabola, pump);
+                if (intersection && (!pump.isTrimmedVariant || (intersection.x >= pump.bounds.x1 && intersection.x <= pump.bounds.x2))) {
+                    const efficiency = calculateEfficiency(pump, intersection.x);
+                    if (efficiency < 3) return;
+
+                    if (intersection.y < pointY) return;
+
+                    const xOpt = pump.controlPoint ? pump.controlPoint.x : undefined;
+                    const yOpt = pump.controlPoint ? pump.controlPoint.y : undefined;
+                    const effOpt = (xOpt !== undefined) ? calculateEfficiency(pump, xOpt) : efficiency;
+                    const powerKw = (xOpt !== undefined && yOpt !== undefined)
+                        ? calculateMotorPowerKw(pump, xOpt, yOpt, effOpt)
+                        : calculateMotorPowerKw(pump, intersection.x, intersection.y, efficiency);
+                    if (powerKw !== null && powerKw < minPower) return;
+                    const weightKg = pumpWeights[pump.name] ?? 0;
+                    const distance = Math.sqrt(
+                        Math.pow(intersection.x - userPoint.x, 2) + 
+                        Math.pow(intersection.y - userPoint.y, 2)
+                    );
+                    
+
+                    const normEfficiency = efficiency / 100;
+
+                    intersectionPoints.push({
+                        pump: pump,
+                        point: intersection,
+                        efficiency: efficiency,
+                        distance: distance,
+                        normEfficiency: normEfficiency,
+                        powerKw: powerKw, // оставляем для отображения и имени
+                        weightKg: weightKg,
+                        rawDistance: distance
+                    });
+                }
+            });
+
+            if (intersectionPoints.length === 0) {
+                showResult("Нет подходящих насосов для указанных параметров", true);
+                return;
+            }
+
+
+            const maxDistance = Math.max(...intersectionPoints.map(item => item.rawDistance));
+            const maxWeight = Math.max(...intersectionPoints.map(item => item.weightKg ?? 0));
+            
+
+            intersectionPoints.forEach(item => {
+                item.normDistance = 1 - (item.rawDistance / maxDistance);
+                item.normWeight = maxWeight ? 1 - ((item.weightKg ?? 0) / maxWeight) : 1;
+                item.weightedScore = 
+                    (item.normEfficiency * EFFICIENCY_WEIGHT) + 
+                    (item.normDistance * DISTANCE_WEIGHT) +
+                    (item.normWeight * POWER_WEIGHT);
+            });
+
+
+            intersectionPoints.sort((a, b) => b.weightedScore - a.weightedScore);
+            
+            currentSort = { column: 'weighted', direction: 'desc' };
+            updateChart();
+            showResults();
+        }
+
+
+        function buildDirectList() {
+            if (!Array.isArray(window.pumpParabolas) || window.pumpParabolas.length === 0) {
+                showResult('Данные о насосах еще не загружены', true);
+                return;
+            }
+            
+
+            const requiredHead = parseFloat(document.getElementById('pointY')?.value);
+            const minPower = parseFloat(document.getElementById('powerMin')?.value) || 0;
+            
+            intersectionPoints = [];
+            window.pumpParabolas.forEach(pump => {
+                const pumpType = (document.getElementById('pumpType')?.value) || 'sewage';
+                const name = String(pump.name || '');
+                const isSludge = name.includes('ШлП');
+                const isDrainage = name.includes('ДнП');
+                if (pumpType === 'sludge' && !isSludge) return;
+                if (pumpType === 'drainage' && !isDrainage) return;
+                if (pumpType === 'sewage' && (isSludge || isDrainage)) return;
+                if (!pump.controlPoint) return;
+                const x = pump.controlPoint.x;
+                const y = pump.controlPoint.y;
+                const eff = calculateEfficiency(pump, x);
+                if (eff <= 0) return;
+
+                if (!isNaN(requiredHead) && y < requiredHead) return;
+                const powerKw = calculateMotorPowerKw(pump, x, y, eff);
+                if (powerKw !== null && powerKw < minPower) return;
+                intersectionPoints.push({
+                    pump: pump,
+                    point: { x, y },
+                    efficiency: eff,
+                    powerKw: powerKw,
+                    distance: 0,
+                    normEfficiency: eff / 100,
+                    rawDistance: 0,
+                    weightedScore: eff / 100
+                });
+            });
+            
+
+            allPumps = [...intersectionPoints];
+            
+
+            intersectionPoints.sort((a, b) => b.efficiency - a.efficiency);
+            currentSort = { column: 'efficiency', direction: 'desc' };
+            
+
+            document.getElementById('searchContainer').style.display = 'block';
+            
+
+
+            showResults();
+        }
+
+        function sortTable(column) {
+            const direction = currentSort.column === column ? 
+                (currentSort.direction === 'asc' ? 'desc' : 'asc') : 'asc';
+            
+            intersectionPoints.sort((a, b) => {
+                let valueA, valueB;
+                switch(column) {
+                    case 'name': 
+                        valueA = a.pump.name.toLowerCase();
+                        valueB = b.pump.name.toLowerCase();
+                        break;
+                    case 'flow': 
+                        valueA = a.point.x;
+                        valueB = b.point.x;
+                        break;
+                    case 'head': 
+                        valueA = a.point.y;
+                        valueB = b.point.y;
+                        break;
+                    case 'weight':
+                        valueA = a.weightKg ?? 0;
+                        valueB = b.weightKg ?? 0;
+                        break;
+                    case 'efficiency': 
+                        valueA = a.efficiency;
+                        valueB = b.efficiency;
+                        break;
+                    case 'weighted':
+                        valueA = a.weightedScore;
+                        valueB = b.weightedScore;
+                        break;
+                    default: 
+                        return 0;
+                }
+                
+                if (valueA < valueB) return direction === 'asc' ? -1 : 1;
+                if (valueA > valueB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            currentSort = { column, direction };
+            showResults();
+        }
+
+        function updateChart() {
+
+            if (intersectionPoints.length > 0) {
+                const first = intersectionPoints[0];
+                window._debugWorkingPoint = first.point;
+                console.log('[select.html][updateChart] workingPoint:', first.point, 'controlPoint:', first.pump.controlPoint);
+            }
+            
+            intersectionPoints.forEach(item => {
+            });
+        }
+
+        function replacePumpNumber(pumpName, pumpType, explosionProof) {
+            // Заменяет число в формате "3069.180" на соответствующее значение
+            // Правила:
+            // - 180 - для невзрывозащищенных канализационных и дренажных
+            // - 300 - для невзрывозащищенных шламовых
+            // - 090 - для взрывозащищенных канализационных и дренажных
+            // - 310 - для взрывозащищенных шламовых
+            
+            // Определяем тип насоса по названию
+            const isSludge = pumpName.includes('Шл') || pumpName.includes('ШлП');
+            const isDrainage = pumpName.includes('Дн') || pumpName.includes('ДнП');
+            const isSewage = !isSludge && !isDrainage; // Кн - канализационный
+            
+            // Определяем взрывозащищенность
+            const isExplosionProof = explosionProof && (
+                explosionProof.toLowerCase().includes('да') || 
+                explosionProof.toLowerCase() === 'yes' ||
+                explosionProof === '1' ||
+                explosionProof === true ||
+                explosionProof === 'да'
+            );
+            
+            // Определяем нужное число
+            let targetNumber;
+            if (isExplosionProof) {
+                // Взрывозащищенные
+                targetNumber = isSludge ? '310' : '090';
+            } else {
+                // Невзрывозащищенные
+                targetNumber = isSludge ? '300' : '180';
+            }
+            
+            // Заменяем число в формате "XXXX.180" или "XXXX.300" и т.д. на нужное
+            // Ищем паттерн: 4 цифры, точка, 3 цифры
+            return pumpName.replace(/(\d{4})\.(\d{3})/g, `$1.${targetNumber}`);
+        }
+
+        function addPowerToPumpName(pumpName, powerKw) {
+            // Добавляет мощность двигателя после числа полюсов в названии насоса
+            // Формат: "АГМ В КнП 3069.180 СН 4" -> "АГМ В КнП 3069.180 СН 4 5.5"
+            // Формат с диаметром: "АГМ В КнП 3069.180 СН 4 (150mm)" -> "АГМ В КнП 3069.180 СН 4 5.5 (150mm)"
+            if (!powerKw || powerKw === '-' || powerKw === 0 || isNaN(powerKw)) {
+                return pumpName;
+            }
+            
+            // Форматируем мощность: убираем лишние нули, но оставляем десятичные значения
+            const powerNum = parseFloat(powerKw);
+            const powerFormatted = powerNum % 1 === 0 ? powerNum.toString() : powerNum.toFixed(1);
+            
+            // Проверяем, не добавлена ли уже мощность (чтобы не дублировать)
+            // Ищем паттерн: число полюсов, пробел, число (мощность), затем может быть пробел и скобка
+            if (pumpName.match(/(?:СН|ВН|НН|СвН)\s+\d+\s+\d+(?:\.\d+)?\s*(?:\(|$)/)) {
+                // Проверяем, есть ли уже мощность (число после числа полюсов, но не в скобках)
+                const powerCheck = pumpName.match(/(?:СН|ВН|НН|СвН)\s+\d+\s+(\d+(?:\.\d+)?)\s*(?:\(|$)/);
+                if (powerCheck && parseFloat(powerCheck[1]) >= 1 && parseFloat(powerCheck[1]) <= 400) {
+                    // Похоже, что мощность уже добавлена (мощность обычно в диапазоне 1-400 кВт)
+                    return pumpName;
+                }
+            }
+            
+            // Ищем последнее вхождение паттерна: тип обточки (СН, ВН, НН, СвН), пробел, число полюсов
+            // Затем может быть пробел и скобка с диаметром или конец строки
+            const pattern = /((?:СН|ВН|НН|СвН)\s+\d+)(\s*\([^)]*\)|$|\s)/g;
+            let lastMatch = null;
+            let lastIndex = -1;
+            let match;
+            
+            while ((match = pattern.exec(pumpName)) !== null) {
+                lastMatch = match;
+                lastIndex = match.index;
+            }
+            
+            if (lastMatch) {
+                // Заменяем последнее вхождение
+                const before = pumpName.substring(0, lastIndex);
+                const after = pumpName.substring(lastIndex + lastMatch[1].length);
+                // Добавляем мощность перед скобкой с диаметром или в конце
+                if (lastMatch[2].trim().startsWith('(')) {
+                    // Есть скобка с диаметром, вставляем мощность перед ней
+                    return before + lastMatch[1] + ' ' + powerFormatted + ' ' + lastMatch[2];
+                } else {
+                    // Нет скобки, просто добавляем мощность в конце
+                    return before + lastMatch[1] + ' ' + powerFormatted + (lastMatch[2] || '');
+                }
+            }
+            
+            return pumpName;
+        }
+
+        function formatPumpNameForDisplay(pumpName, pumpType = null, explosionProof = null, powerKw = null) {
+            // Убираем букву П из названия для отображения на странице
+            // Обрабатываем все типы насосов: КнП, ШлП, ДнП
+            let result = pumpName.replace(/КнП/g, 'Кн').replace(/ШлП/g, 'Шл').replace(/ДнП/g, 'Дн');
+            
+            // Заменяем число в зависимости от типа насоса и взрывозащищенности
+            if (pumpType !== null && explosionProof !== null) {
+                result = replacePumpNumber(result, pumpType, explosionProof);
+            }
+            
+            // Добавляем мощность двигателя после числа полюсов
+            if (powerKw !== null && powerKw !== undefined) {
+                result = addPowerToPumpName(result, powerKw);
+            }
+            
+            return result;
+        }
+
+        function showResults() {
+            const tableBody = document.getElementById('resultsTableBody');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+
+            const actionHeader = document.querySelector('.results-table th:last-child');
+            actionHeader.innerHTML = `
+                <div class="reset-sort-header">
+                    <button class="reset-sort-btn" title="Сбросить сортировку к начальной">
+                        Сбросить сортировку
+                    </button>
+                </div>
+            `;
+            actionHeader.querySelector('.reset-sort-btn').onclick = resetToDefaultSort;
+            
+
+            // Получаем параметры для замены числа в названии
+            const pumpType = document.getElementById('pumpType')?.value || 'sewage';
+            const explosionProof = document.getElementById('explosionProof')?.value || 'нет';
+
+            intersectionPoints.forEach(item => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+            const powerKw = item.powerKw ?? null;
+            nameCell.textContent = formatPumpNameForDisplay(item.pump.name, pumpType, explosionProof, powerKw);
+                nameCell.style.fontWeight = '550';
+                nameCell.style.fontSize = '0.75rem';
+                row.appendChild(nameCell);
+                
+                const flowCell = document.createElement('td');
+                flowCell.textContent = (isDirectMode ? item.pump.controlPoint.x : item.point.x).toFixed(2);
+                row.appendChild(flowCell);
+                
+                const headCell = document.createElement('td');
+                headCell.textContent = (isDirectMode ? item.pump.controlPoint.y : item.point.y).toFixed(2);
+                row.appendChild(headCell);
+                
+                const effCell = document.createElement('td');
+                effCell.textContent = item.efficiency.toFixed(1);
+                row.appendChild(effCell);
+          
+                
+                const actionCell = document.createElement('td');
+                const detailsBtn = document.createElement('button');
+                detailsBtn.className = 'view-btn';
+                detailsBtn.textContent = 'Подробнее';
+                detailsBtn.onclick = function() { openResultPage(item); };
+                actionCell.appendChild(detailsBtn);
+                
+                row.appendChild(actionCell);
+                tableBody.appendChild(row);
+            });
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            if (resultsContainer) resultsContainer.style.display = 'block';
+            
+            const poleFilterContainer = document.getElementById('poleFilterContainer');
+            if (poleFilterContainer) poleFilterContainer.style.display = 'block';
+        }
+
+        function resetToDefaultSort() {
+
+            if (!isDirectMode) {
+                const distances = intersectionPoints.map(item => item.rawDistance);
+            const weights = intersectionPoints.map(item => item.weightKg ?? 0);
+            const maxDistance = distances.length ? Math.max(...distances) : 0;
+            const maxWeight = weights.length ? Math.max(...weights) : 0;
+                intersectionPoints.forEach(item => {
+                    item.normDistance = maxDistance ? 1 - (item.rawDistance / maxDistance) : 1;
+                item.normWeight = maxWeight ? 1 - ((item.weightKg ?? 0) / maxWeight) : 1;
+                    item.weightedScore = 
+                        (item.normEfficiency * EFFICIENCY_WEIGHT) + 
+                        (item.normDistance * DISTANCE_WEIGHT) +
+                    (item.normWeight * POWER_WEIGHT);
+                });
+
+                intersectionPoints.sort((a, b) => b.weightedScore - a.weightedScore);
+                currentSort = { column: 'weighted', direction: 'desc' };
+            } else {
+
+                intersectionPoints.sort((a, b) => b.efficiency - a.efficiency);
+                currentSort = { column: 'efficiency', direction: 'desc' };
+            }
+            
+
+            showResults();
+            
+
+            showResult("Сортировка сброшена к начальной", false);
+        }
+
+        function openResultPage(item) {
+    sessionStorage.setItem('pumpParabolas', JSON.stringify(window.pumpParabolas));
+
+    sessionStorage.setItem('pumpWeights', JSON.stringify(pumpWeights));
+    sessionStorage.setItem('pumpDimensions', JSON.stringify(pumpDimensions));
+    const params = new URLSearchParams();
+    
+
+    const pumpNumber = window.pumpParabolas.findIndex(p => 
+        p.name === item.pump.name && 
+        p.controlPoint.x === item.pump.controlPoint.x && 
+        p.controlPoint.y === item.pump.controlPoint.y
+    );
+    
+
+    const staticHeadValue = parseFloat(document.getElementById('staticHead').value);
+    
+    params.append('pumpNumber', pumpNumber);
+    params.append('pumpType', document.getElementById('pumpType').value);
+    params.append('parabolaPointX', item.pump.controlPoint.x.toFixed(2));
+    params.append('parabolaPointY', item.pump.controlPoint.y.toFixed(2));
+
+    if (isDirectMode) {
+        params.append('workingPointX', item.pump.controlPoint.x.toFixed(2));
+        params.append('workingPointY', item.pump.controlPoint.y.toFixed(2));
+    } else {
+        params.append('workingPointX', item.point.x.toFixed(2));
+        params.append('workingPointY', item.point.y.toFixed(2));
+    }
+    params.append('efficiency', item.efficiency.toFixed(1));
+    params.append('staticHead', staticHeadValue.toString());
+    params.append('density', document.getElementById('density').value);
+    
+    switch(document.getElementById('material').value) {
+        case 'чугун': params.append('material', 'Сч20'); break;
+        case 'высокохромистый чугун': params.append('material', 'Чх16'); break;
+        case 'нержавеющая сталь': params.append('material', '12х18н10т'); break;
+        case 'алюминий': params.append('material', 'АЛ2'); break;
+    }
+    params.append('voltage', document.getElementById('voltage').value);
+    params.append('cableLength', document.getElementById('cableLength').value);
+    params.append('selectedPumpType', document.getElementById('pumpType').value);
+    params.append('heatClass', document.getElementById('insulationClass').value);
+    params.append('explosionProof', document.getElementById('explosionProof').value);
+    
+    // Сохраняем параметры в localStorage на случай, если пользователь не авторизован
+    localStorage.setItem('pendingResultParams', params.toString());
+    
+    window.location.href = 'result.html?' + params.toString();
+}
+
+        function showResult(message, isError) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'block';
+            resultDiv.style.backgroundColor = isError ? '#FFF3E0' : '#E8F5E9';
+            resultDiv.style.color = isError ? '#888585' : '#2E7D32';
+            resultDiv.style.borderLeftColor = isError ? '#888585' : '#4CAF50';
+        }
+
+        function resetChart() {
+            document.getElementById('pointX').value = '';
+            document.getElementById('pointY').value = '';
+            document.getElementById('staticHead').value = '0';
+            document.getElementById('density').value = '1000';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('searchContainer').style.display = 'none';
+            document.getElementById('poleFilterContainer').style.display = 'none';
+            document.getElementById('pumpSearch').value = '';
+            document.querySelectorAll('.pole-filter').forEach(cb => cb.checked = true);
+            userPoint = null;
+            systemParabola = null;
+            intersectionPoints = [];
+            allPumps = [];
+            currentSort = { column: null, direction: 'asc' };
+            
+
+            const materialEl = document.getElementById('material');
+            const explosionProofEl = document.getElementById('explosionProof');
+            if (materialEl && explosionProofEl) {
+                materialEl.value = 'чугун';
+                explosionProofEl.value = 'нет';
+
+                const updateExplosionProofOptions = () => {
+                    const explosionOptions = explosionProofEl.querySelectorAll('option');
+                    explosionOptions.forEach(option => {
+                        if (option.value === 'да') {
+                            option.disabled = false;
+                        }
+                    });
+                };
+                const updateMaterialOptions = () => {
+                    const materialOptions = materialEl.querySelectorAll('option');
+                    materialOptions.forEach(option => {
+                        if (option.value === 'алюминий') {
+                            option.disabled = false;
+                        }
+                    });
+                };
+                updateExplosionProofOptions();
+                updateMaterialOptions();
+            }
+        }
+        
+
+        function filterPumps() {
+            const searchTerm = document.getElementById('pumpSearch').value.toLowerCase().trim();
+            
+            const selectedPoles = [];
+            document.querySelectorAll('.pole-filter:checked').forEach(cb => {
+                selectedPoles.push(parseInt(cb.value));
+            });
+            
+            intersectionPoints = allPumps.filter(item => {
+                const matchesSearch = !searchTerm || item.pump.name.toLowerCase().includes(searchTerm);
+                
+                const matchesPoles = selectedPoles.length === 0 || 
+                                    selectedPoles.length === 4 || 
+                                    (item.pump.p && selectedPoles.includes(item.pump.p));
+                
+                return matchesSearch && matchesPoles;
+            });
+            
+
+            if (currentSort.column === 'efficiency') {
+                intersectionPoints.sort((a, b) => currentSort.direction === 'asc' ? a.efficiency - b.efficiency : b.efficiency - a.efficiency);
+            }
+            
+
+            showResults();
+            
+
+            const count = intersectionPoints.length;
+            const total = allPumps.length;
+            if (searchTerm || selectedPoles.length < 4) {
+                showResult(`Найдено насосов: ${count} из ${total}`, false);
+            }
+        }
+        
+
+        function clearSearch() {
+            document.getElementById('pumpSearch').value = '';
+            intersectionPoints = [...allPumps];
+            showResults();
+            showResult('Поиск очищен', false);
+        }
+        
+        // ============= АВТОРИЗАЦИЯ =============
+        
+        let currentUser = null;
+        
+        // Проверка авторизации при загрузке страницы
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/user', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    currentUser = data.user;
+                    showAuthWidget(data.user);
+                } else {
+                    showLoginWidget();
+                }
+            } catch (error) {
+                console.error('Ошибка проверки авторизации:', error);
+                showLoginWidget();
+            }
+        }
+        
+        // Показать виджет авторизации
+        function showAuthWidget(user) {
+            const authWidget = document.getElementById('authWidget');
+            const loginWidget = document.getElementById('loginWidget');
+            const userName = document.getElementById('authUserName');
+            
+            if (authWidget && userName) {
+                userName.textContent = user.username;
+                authWidget.style.display = 'flex';
+                if (loginWidget) loginWidget.style.display = 'none';
+            }
+        }
+        
+        // Показать виджет входа
+        function showLoginWidget() {
+            const authWidget = document.getElementById('authWidget');
+            const loginWidget = document.getElementById('loginWidget');
+            
+            if (authWidget) authWidget.style.display = 'none';
+            if (loginWidget) loginWidget.style.display = 'flex';
+        }
+        
+        // Обработчик кнопки выхода
+        document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = null;
+                    showLoginWidget();
+                }
+            } catch (error) {
+                console.error('Ошибка выхода:', error);
+            }
+        });
+        
+        // Проверяем авторизацию при загрузке
+        checkAuth();
+    </script>
+</body>
+</html>

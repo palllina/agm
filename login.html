@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | AGM</title>
+    <script src="tg.js"></script>
+    <style>
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+            font-weight: 300;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Bold.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'TTWellingtons';
+            src: url('fonts/TT_Wellingtons_Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        :root {
+            --primary: #0CA5C4;
+            --primary-dark: #007eb3;
+            --accent: #888585;
+            --text: #333333;
+            --text-light: #777777;
+            --bg: #F5F7FA;
+            --card: #FFFFFF;
+            --border: #E0E0E0;
+            --success: #4CAF50;
+            --error: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'TTWellingtons', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            background: var(--primary);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .auth-header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+        }
+
+        .auth-tab.active {
+            color: var(--primary);
+            background: white;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .auth-tab:hover {
+            background: rgba(12, 165, 196, 0.05);
+        }
+
+        .auth-forms {
+            padding: 40px 30px;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(12, 165, 196, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(12, 165, 196, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .password-requirements {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .register-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(12, 165, 196, 0.3);
+        }
+
+        .register-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Модальное окно */
+        .modal-overlay {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .modal-overlay.closing {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform: translateY(30px);
+            opacity: 0;
+            transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-overlay.closing .modal-content {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-info {
+            background: #e3f2fd;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: var(--text);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .modal-info strong {
+            color: var(--primary);
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                border-radius: 10px;
+            }
+
+            .auth-header {
+                padding: 30px 20px;
+            }
+
+            .auth-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .auth-forms {
+                padding: 30px 20px;
+            }
+
+            .modal-content {
+                max-width: 100%;
+                border-radius: 10px;
+            }
+
+            .modal-header {
+                padding: 20px;
+                border-radius: 10px 10px 0 0;
+            }
+
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>AGM</h1>
+            <p>Система подбора насосного оборудования</p>
+        </div>
+
+        <!-- Только вход, регистрация отключена -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login" style="flex: 1; cursor: default;">Вход в систему</button>
+        </div>
+
+        <div class="auth-forms">
+            <div id="message" class="message"></div>
+
+            <!-- Форма входа -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginUsername">Имя пользователя</label>
+                    <input type="text" id="loginUsername" name="username" placeholder="Введите имя пользователя" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" name="password" placeholder="Введите пароль" required>
+                </div>
+                <button type="submit" class="submit-btn">Войти</button>
+            </form>
+
+            <button type="button" class="register-btn" id="registerBtn">Регистрация</button>
+
+            <div class="back-link">
+                <a href="/select.html">← Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Регистрация</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-info">
+                    <strong>Для получения логина и пароля свяжитесь с поддержкой</strong>
+                </div>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="registerFullName">ФИО</label>
+                        <input type="text" id="registerFullName" name="fullName" placeholder="Введите ваше полное имя" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerCompany">Название компании</label>
+                        <input type="text" id="registerCompany" name="company" placeholder="Введите название компании" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerContact">Email / Номер телефона</label>
+                        <input type="text" id="registerContact" name="contact" placeholder="Введите email или номер телефона">
+                    </div>
+                    <div id="registerMessage" class="message"></div>
+                    <button type="submit" class="submit-btn" id="registerSubmitBtn">Отправить запрос</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Переключение табов отключено (только вход)
+        const messageEl = document.getElementById('message');
+
+        // Функции для отображения сообщений
+        function showMessage(text, type) {
+            messageEl.textContent = text;
+            messageEl.className = `message ${type} show`;
+        }
+
+        function hideMessage() {
+            messageEl.classList.remove('show');
+        }
+
+        // Обработка формы входа
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const submitBtn = e.target.querySelector('.submit-btn');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Вход...';
+            hideMessage();
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Вход выполнен успешно! Перенаправление...', 'success');
+                    setTimeout(() => {
+                        // Проверяем, есть ли сохраненные параметры подбора
+                        const pendingParams = localStorage.getItem('pendingResultParams');
+                        if (pendingParams) {
+                            // Перенаправляем на result.html с сохраненными параметрами
+                            localStorage.removeItem('pendingResultParams');
+                            window.location.href = '/result.html?' + pendingParams;
+                        } else {
+                            // Обычное перенаправление на главную
+                            window.location.href = '/select.html';
+                        }
+                    }, 1000);
+                } else {
+                    showMessage(data.error || 'Ошибка входа', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Войти';
+                }
+            } catch (error) {
+                showMessage('Ошибка соединения с сервером', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Войти';
+            }
+        });
+
+        // Регистрация отключена для обычных пользователей
+
+        // Проверка, авторизован ли пользователь уже
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/user', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    // Уже авторизован, проверяем сохраненные параметры
+                    const pendingParams = localStorage.getItem('pendingResultParams');
+                    if (pendingParams) {
+                        localStorage.removeItem('pendingResultParams');
+                        window.location.href = '/result.html?' + pendingParams;
+                    } else {
+                        window.location.href = '/select.html';
+                    }
+                }
+            } catch (error) {
+                // Игнорируем ошибки
+            }
+        }
+
+        checkAuth();
+
+        // Модальное окно регистрации
+        const registerBtn = document.getElementById('registerBtn');
+        const registerModal = document.getElementById('registerModal');
+        const closeModal = document.getElementById('closeModal');
+        const registerForm = document.getElementById('registerForm');
+        const registerMessage = document.getElementById('registerMessage');
+        const registerSubmitBtn = document.getElementById('registerSubmitBtn');
+
+        // Функция плавного закрытия модального окна
+        function closeRegisterModal() {
+            registerModal.classList.add('closing');
+            setTimeout(() => {
+                registerModal.classList.remove('show', 'closing');
+                document.body.style.overflow = '';
+                registerForm.reset();
+                hideRegisterMessage();
+            }, 300); // Время должно совпадать с transition
+        }
+
+        // Открытие модального окна
+        registerBtn.addEventListener('click', () => {
+            registerModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Закрытие модального окна
+        closeModal.addEventListener('click', () => {
+            closeRegisterModal();
+        });
+
+        // Закрытие при клике вне модального окна
+        registerModal.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                closeRegisterModal();
+            }
+        });
+
+        // Закрытие по Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && registerModal.classList.contains('show')) {
+                closeRegisterModal();
+            }
+        });
+
+        function showRegisterMessage(text, type) {
+            registerMessage.textContent = text;
+            registerMessage.className = `message ${type} show`;
+        }
+
+        function hideRegisterMessage() {
+            registerMessage.classList.remove('show');
+        }
+
+        // Обработка формы регистрации
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('registerFullName').value.trim();
+            const company = document.getElementById('registerCompany').value.trim();
+            const contact = document.getElementById('registerContact').value.trim();
+            
+            if (!fullName || !company) {
+                showRegisterMessage('Пожалуйста, заполните все обязательные поля', 'error');
+                return;
+            }
+            
+            registerSubmitBtn.disabled = true;
+            registerSubmitBtn.textContent = 'Отправка...';
+            hideRegisterMessage();
+            
+            try {
+                // Формируем сообщение для Telegram
+                let telegramMessage = `🔐 Запрос на регистрацию
+
+ФИО: ${fullName}
+Компания: ${company}`;
+
+                if (contact) {
+                    telegramMessage += `\nКонтакт: ${contact}`;
+                }
+
+                telegramMessage += `\n\nДата запроса: ${new Date().toLocaleString('ru-RU')}`;
+
+                // Отправляем в Telegram
+                const result = await sendToTelegram(telegramMessage);
+                
+                if (result.success) {
+                    showRegisterMessage('Запрос успешно отправлен! Мы свяжемся с вами в ближайшее время.', 'success');
+                    setTimeout(() => {
+                        closeRegisterModal();
+                    }, 2000);
+                } else {
+                    showRegisterMessage('Ошибка отправки: ' + (result.error || 'Неизвестная ошибка'), 'error');
+                    registerSubmitBtn.disabled = false;
+                    registerSubmitBtn.textContent = 'Отправить запрос';
+                }
+            } catch (error) {
+                showRegisterMessage('Ошибка соединения с сервером', 'error');
+                registerSubmitBtn.disabled = false;
+                registerSubmitBtn.textContent = 'Отправить запрос';
+            }
+        });
+    </script>
+</body>
+</html>

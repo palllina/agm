@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Расчёт трубопровода</title>
+  <style>
+    @font-face {
+      font-family: 'TTWellingtons';
+      src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'TTWellingtons';
+      src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'TTWellingtons';
+      src: url('fonts/TT_Wellingtons_Medium.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'TTWellingtons';
+      src: url('fonts/TT_Wellingtons_Bold.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'TTWellingtons';
+      src: url('fonts/TT_Wellingtons_Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    body {
+      font-family: 'TTWellingtons', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    /* Переопределяем user agent stylesheet для h1 */
+    h1 {
+      text-align: center;
+      padding: 18px 0;
+      margin: 0 !important;
+      margin-block-start: 0 !important;
+      margin-block-end: 0 !important;
+      margin-inline-start: 0 !important;
+      margin-inline-end: 0 !important;
+      background: #0CA5C4;
+      color: white;
+      font-weight: 600 !important;
+      font-size: 1.5rem !important;
+      width: 100%;
+      display: block !important;
+      unicode-bidi: isolate !important;
+    }
+    
+    @media (max-width: 768px) {
+      h1,
+      .header-container h1 {
+        font-size: 1.2rem !important;
+        line-height: 1.3 !important;
+        padding: 14px 10px !important;
+        margin: 0 !important;
+        margin-block-start: 0 !important;
+        margin-block-end: 0 !important;
+        margin-inline-start: 0 !important;
+        margin-inline-end: 0 !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
+        display: block !important;
+        unicode-bidi: isolate !important;
+      }
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 15px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      max-width: 800px;
+      border: none;
+    }
+    label {
+      display: block;
+      margin: 8px 0 4px;
+      font-size: 1rem;
+      color: #555;
+    }
+    input[type="number"], select {
+      width: 80px;
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .local-resistance-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .local-resistance-group label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.95rem;
+    }
+    .local-resistance-group strong {
+      grid-column: 1 / -1;
+      margin-bottom: 8px;
+      color: #555;
+    }
+    .results {
+      background: #f8f9fa;
+      padding: 20px;
+      border-left: 4px solid #888585;
+      border-radius: 4px;
+      margin-top: 20px;
+      font-size: 18px;
+      line-height: 1.6;
+      color: #888585;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #0CA5C4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+      font-family: 'TTWellingtons', sans-serif;
+    }
+    button:hover {
+      background: #007bb5;
+    }
+    .flow-inputs {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .flow-inputs label {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+    .hidden {
+      display: none;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .local-resistance-group label {
+      font-weight: normal;
+    }
+    h3 {
+      color: #0CA5C4;
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .header-container {
+      width: 100%;
+      background: #0CA5C4;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-container">
+    <h1>Расчёт трубопровода</h1>
+  </div>
+  
+  <div class="container">
+    <div class="section">
+      <div class="flow-inputs">
+        <label>
+          Расход: 
+          <input type="number" id="flowRate" value="100" min="0" step="any" />
+        </label>
+        <label>
+          <select id="flowUnit">
+            <option value="m3h" selected>м³/ч</option>
+            <option value="ls">л/с</option>
+          </select>
+        </label>
+      </div>
+      <label>Статический напор (м): <input type="number" id="staticHead" value="0" step="any" /></label>
+      <label>Количество насосов: <input type="number" id="sectionCount" value="1" min="1" max="10"></label>
+
+      <label id="connectionWrapper" class="hidden">Тип соединения насосов:
+        <select id="connectionType", style = "width: 180px;">
+	<option value="parallel">Параллельное</option>
+          <option value="series">Последовательное</option>
+          
+        </select>
+      </label>
+    </div>
+
+    <div id="sectionsContainer"></div>
+
+    <div class="section" id="commonSectionContainer" class="hidden">
+      <h3>Общий трубопровод</h3>
+      <label>Длина (м): <input type="number" id="commonLength" value="10" min="0" step="any"></label>
+      <label>Диаметр (мм): <input type="number" id="commonDiameter" value="100" min="0" step="any"></label>
+      <label>Состояние:
+        <select id="commonCondition", style = "width: 120px;">
+          <option value="0.0001">Новое</option>
+          <option value="0.0004">Старое</option>
+        </select>
+      </label>
+      <div class="local-resistance-group">
+        <strong>Укажите количество местных сопротивлений общего трубопровода</strong>
+        <label>
+          Колено 90°
+          <input type="number" id="common-ζ-bend" value="0" min="0">
+        </label>
+        <label>
+          Задвижка
+          <input type="number" id="common-ζ-valve" value="0" min="0">
+        </label>
+        <label>
+          Тройник
+          <input type="number" id="common-ζ-tee" value="0" min="0">
+        </label>
+        <label>
+          Обратный клапан
+          <input type="number" id="common-ζ-check" value="0" min="0">
+        </label>
+      </div>
+      <label>Сопротивление на выходе:
+        <select id="common-ζ-exit", style = "width: 200px;">
+          <option value="0">Нет</option>
+          <option value="0.3">Выход в бак</option>
+          <option value="1">Выход в атмосферу</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="section">
+      <button id="calculateButton">Рассчитать потребный напор</button>
+      <div id="results" class="results"></div>
+    </div>
+  </div>
+
+  <script>
+
+    function toggleConnectionTypeVisibility() {
+      const count = parseInt(document.getElementById('sectionCount').value);
+      const wrapper = document.getElementById('connectionWrapper');
+      wrapper.classList.toggle('hidden', count === 1);
+    }
+
+    function generateSectionHTML(title, isSinglePump = false) {
+      let exitResistanceHTML = '';
+      if (isSinglePump) {
+        exitResistanceHTML = `
+          <label>Сопротивление на выходе:
+            <select class="ζ-exit", style = "width: 200px;">
+              <option value="0">Нет</option>
+              <option value="0.3">Выход в бак</option>
+              <option value="1">Выход в атмосферу</option>
+            </select>
+          </label>
+        `;
+      }
+
+      return `
+        <h3>${title}</h3>
+        <label>Длина (м): <input type="number" class="length" value="10"></label>
+        <label>Диаметр (мм): <input type="number" class="diameter" value="100"></label>
+        <label>Состояние:
+          <select class="condition", style = "width: 120px;">
+            <option value="0.0001">Новое</option>
+            <option value="0.0004">Старое</option>
+          </select>
+        </label>
+        <div class="local-resistance-group">
+          <strong>Укажите количество местных сопротивлений</strong>
+          <label>
+            Колено 90°
+            <input type="number" class="ζ-bend" value="0">
+          </label>
+          <label>
+            Задвижка
+            <input type="number" class="ζ-valve" value="0">
+          </label>
+          <label>
+            Тройник
+            <input type="number" class="ζ-tee" value="0">
+          </label>
+          <label>
+            Обратный клапан
+            <input type="number" class="ζ-check" value="0">
+          </label>
+        </div>
+        ${exitResistanceHTML}
+      `;
+    }
+
+    function generateSections() {
+      const count = parseInt(document.getElementById('sectionCount').value);
+      const container = document.getElementById('sectionsContainer');
+      const commonSection = document.getElementById('commonSectionContainer');
+      container.innerHTML = '';
+
+      if (count === 1) {
+
+        const section = document.createElement('div');
+        section.className = 'section';
+        section.innerHTML = generateSectionHTML('Участок насоса 1', true);
+        container.appendChild(section);
+        
+
+        commonSection.classList.add('hidden');
+      } else {
+
+        commonSection.classList.remove('hidden');
+        
+
+        for (let i = 0; i < count; i++) {
+          const section = document.createElement('div');
+          section.className = 'section';
+          section.innerHTML = generateSectionHTML(`Участок насоса ${i + 1}`);
+          container.appendChild(section);
+        }
+      }
+
+      toggleConnectionTypeVisibility();
+    }
+
+    function calculatePumpHead() {
+      const g = 9.81;
+      const ν = 1e-6;
+
+
+      let Q = parseFloat(document.getElementById('flowRate').value);
+      const unit = document.getElementById('flowUnit').value;
+      const count = parseInt(document.getElementById('sectionCount').value);
+      const connection = document.getElementById('connectionType').value;
+
+      if (isNaN(Q) || Q <= 0 || isNaN(count) || count <= 0) {
+        alert('Введите корректные значения расхода и количества насосов');
+        return null;
+      }
+
+
+      Q = (unit === 'm3h') ? Q / 3600 : Q / 1000;
+
+
+      const Q_per_nasos = (connection === 'parallel') ? Q / count : Q;
+
+      if (isNaN(Q) || Q <= 0) {
+        alert('Введите корректное значение расхода');
+        return null;
+      }
+
+      const staticHead = parseFloat(document.getElementById('staticHead').value);
+      if (isNaN(staticHead)) {
+        alert('Введите корректное значение статического напора');
+        return null;
+      }
+
+      const sections = document.querySelectorAll('#sectionsContainer .section');
+      if (sections.length === 0) {
+        alert('Добавьте хотя бы один насос');
+        return null;
+      }
+
+      let totalHead = 0;
+
+
+      for (const section of sections) {
+        const L = parseFloat(section.querySelector('.length').value);
+        const d_mm = parseFloat(section.querySelector('.diameter').value);
+        const d = d_mm / 1000;
+        const k = parseFloat(section.querySelector('.condition').value);
+
+        if (isNaN(L) || L <= 0 || isNaN(d) || d <= 0 || isNaN(k)) {
+          alert('Проверьте правильность введённых данных в участках насосов');
+          return null;
+        }
+
+        const A = Math.PI * Math.pow(d / 2, 2);
+        const v = Q_per_nasos / A;
+        const Re = v * d / ν;
+
+        let f;
+        if (Re < 2300) {
+          f = 64 / Re;
+        } else {
+          f = 0.11 * Math.pow(k / d + 68 / Re, 0.25);
+        }
+
+        const hf = f * (L / d) * (v * v) / (2 * g);
+
+        const ζbend = parseInt(section.querySelector('.ζ-bend').value) || 0;
+        const ζvalve = parseInt(section.querySelector('.ζ-valve').value) || 0;
+        const ζtee = parseInt(section.querySelector('.ζ-tee').value) || 0;
+        const ζcheck = parseInt(section.querySelector('.ζ-check').value) || 0;
+
+        const ζtotal = ζbend * 0.3 + ζvalve * 0.3 + ζtee * 0.4 + ζcheck * 0.9;
+        const hl = ζtotal * (v * v) / (2 * g);
+
+
+        let exit_loss = 0;
+        if (count === 1) {
+          const ζ_exit = parseFloat(section.querySelector('.ζ-exit')?.value) || 0;
+          exit_loss = ζ_exit * (v * v) / (2 * g);
+        }
+
+        totalHead += hf + hl + exit_loss;
+      }
+
+
+      let hf_common = 0;
+      let hl_common = 0;
+      let exit_loss_common = 0;
+      
+      if (count > 1) {
+        const commonLength = parseFloat(document.getElementById('commonLength').value);
+        const commonDiameter_mm = parseFloat(document.getElementById('commonDiameter').value);
+        const commonDiameter = commonDiameter_mm / 1000;
+        const commonCondition = parseFloat(document.getElementById('commonCondition').value);
+
+        if (isNaN(commonLength) || commonLength <= 0 || isNaN(commonDiameter) || commonDiameter <= 0 || isNaN(commonCondition)) {
+          alert('Проверьте правильность данных общего трубопровода');
+          return null;
+        }
+
+        const A_common = Math.PI * Math.pow(commonDiameter / 2, 2);
+        const v_common = Q / A_common;
+        const Re_common = v_common * commonDiameter / ν;
+
+        let f_common;
+        if (Re_common < 2300) {
+          f_common = 64 / Re_common;
+        } else {
+          f_common = 0.11 * Math.pow(commonCondition / commonDiameter + 68 / Re_common, 0.25);
+        }
+
+        hf_common = f_common * (commonLength / commonDiameter) * (v_common * v_common) / (2 * g);
+
+        const ζbend_common = parseInt(document.getElementById('common-ζ-bend').value) || 0;
+        const ζvalve_common = parseInt(document.getElementById('common-ζ-valve').value) || 0;
+        const ζtee_common = parseInt(document.getElementById('common-ζ-tee').value) || 0;
+        const ζcheck_common = parseInt(document.getElementById('common-ζ-check').value) || 0;
+
+        const ζtotal_common = ζbend_common * 0.3 + ζvalve_common * 0.3 + ζtee_common * 0.4 + ζcheck_common * 0.9;
+
+        hl_common = ζtotal_common * (v_common * v_common) / (2 * g);
+
+
+        const ζ_exit_common = parseFloat(document.getElementById('common-ζ-exit').value) || 0;
+        exit_loss_common = ζ_exit_common * (v_common * v_common) / (2 * g);
+      }
+
+      const total = totalHead + hf_common + hl_common + exit_loss_common + staticHead;
+
+      let headPerPump, headTotal;
+      
+      if (count === 1) {
+        headPerPump = total;
+      } else {
+        if (connection === 'parallel') {
+          headPerPump = total;
+          headTotal = total;
+        } else {
+          headPerPump = total / count;
+          headTotal = total;
+        }
+      }
+
+      return {
+        headPerPump: Math.ceil(headPerPump * 100) / 100,
+        headTotal: count > 1 ? Math.ceil(headTotal * 100) / 100 : null,
+        flowRate: document.getElementById('flowRate').value,
+        flowUnit: unit,
+        staticHead: staticHead,
+        pumpCount: count,
+        connectionType: count > 1 ? connection : null
+      };
+    }
+
+
+    window.onload = function() {
+      generateSections();
+      document.getElementById('sectionCount').addEventListener('input', generateSections);
+      
+      document.getElementById('calculateButton').addEventListener('click', function() {
+        const result = calculatePumpHead();
+        
+        if (result) {
+          let resultText = '';
+          if (result.pumpCount === 1) {
+            resultText = `<strong>Потребный напор:</strong> ${result.headPerPump} м`;
+          } else if (result.connectionType === 'parallel') {
+            resultText = `<strong>Потребный напор одного насоса:</strong> ${result.headPerPump} м`;
+          } else {
+            resultText = `
+              <strong>Потребный напор одного насоса:</strong> ${result.headPerPump} м<br>
+              <strong>Суммарный потребный напор всей системы:</strong> ${result.headTotal} м
+            `;
+          }
+
+          resultText = `<div style="display:flex;align-items:center;justify-content:space-between;gap:20px;">
+            <div>${resultText}</div>
+            <button id="closeCalcBtn" style="margin-left:20px;background:#888585;">Закрыть</button>
+          </div>`;
+          document.getElementById('results').innerHTML = resultText;
+
+          document.getElementById('closeCalcBtn').onclick = function() { window.close(); };
+
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'pumpCalculationResult',
+              data: result
+            }, '*');
+          }
+        }
+      });
+    };
+  </script>
+</body>
+</html>
