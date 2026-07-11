@@ -3151,6 +3151,9 @@ P_INST_XFRM_ROT_TO_VERT = {
     '2700000': 'eaVert',
 }
 
+P_INST_ODT_FILENAME = 'P_inst.odt'
+P_INST_DOCX_FILENAME = 'P_inst.docx'
+
 
 def _gost_font_available():
 
@@ -3295,6 +3298,145 @@ def _fix_p_inst_xml_for_libreoffice(xml_str):
         xml_str = xml_str.replace('GOST Type AU', P_INST_LINUX_FONT)
 
     return xml_str
+
+
+def _strip_odt_shape_backgrounds(xml_str):
+
+    """Убирает белую заливку draw:custom-shape (стили gr1..gr8) в ODT."""
+
+    import re
+
+    def fix_gr_style(match):
+
+        style = match.group(0)
+
+        style = re.sub(r'draw:fill="solid"', 'draw:fill="none"', style)
+
+        style = re.sub(r'\s*draw:fill-color="[^"]*"', '', style)
+
+        style = re.sub(r'<loext:fill-complex-color[^/]*/>\s*', '', style)
+
+        return style
+
+    return re.sub(
+
+        r'<style:style style:name="gr\d+"[^>]*style:family="graphic"[^>]*>.*?</style:style>',
+
+        fix_gr_style,
+
+        xml_str,
+
+        flags=re.DOTALL,
+
+    )
+
+
+def _fix_p_inst_odt_for_libreoffice(content_xml, styles_xml=None):
+
+    """LibreOffice ODT: прозрачный фон фигур и шрифт GOST."""
+
+    import sys
+
+    content_xml = _strip_odt_shape_backgrounds(content_xml)
+
+    if styles_xml is not None:
+
+        styles_xml = _strip_odt_shape_backgrounds(styles_xml)
+
+    if sys.platform != 'win32' and not _gost_font_available():
+
+        content_xml = content_xml.replace('GOST Type AU', P_INST_LINUX_FONT)
+
+        if styles_xml is not None:
+
+            styles_xml = styles_xml.replace('GOST Type AU', P_INST_LINUX_FONT)
+
+    return content_xml, styles_xml
+
+
+def _fill_p_inst_odt(source_odt, output_odt, values):
+
+    """Заполнение P_inst.odt: плейсхолдеры в content.xml (стиль T2)."""
+
+    import zipfile
+
+    import re
+
+    allowed = set(values.keys())
+
+    with zipfile.ZipFile(source_odt, 'r') as source:
+
+        file_contents = {item.filename: source.read(item.filename) for item in source.infolist()}
+
+    content_bytes = file_contents.get('content.xml')
+
+    if content_bytes is None:
+
+        raise FileNotFoundError('content.xml не найден в P_inst.odt')
+
+    content_str = content_bytes.decode('utf-8')
+
+    styles_str = None
+
+    if 'styles.xml' in file_contents:
+
+        styles_str = file_contents['styles.xml'].decode('utf-8')
+
+    content_str, styles_str = _fix_p_inst_odt_for_libreoffice(content_str, styles_str)
+
+    def replace_t2_span(match):
+
+        open_tag, inner, close_tag = match.group(1), match.group(2), match.group(3)
+
+        key = inner.strip()
+
+        if key == '4':
+
+            key = 'd'
+
+        if key in allowed:
+
+            return open_tag + values[key] + close_tag
+
+        return match.group(0)
+
+    content_str = re.sub(
+
+        r'(<text:span text:style-name="T2">)([^<]*)(</text:span>)',
+
+        replace_t2_span,
+
+        content_str,
+
+    )
+
+    file_contents['content.xml'] = content_str.encode('utf-8')
+
+    if styles_str is not None:
+
+        file_contents['styles.xml'] = styles_str.encode('utf-8')
+
+    with zipfile.ZipFile(output_odt, 'w', zipfile.ZIP_DEFLATED) as target:
+
+        if 'mimetype' in file_contents:
+
+            info = zipfile.ZipInfo('mimetype')
+
+            info.compress_type = zipfile.ZIP_STORED
+
+            target.writestr(info, file_contents['mimetype'])
+
+            for filename, content in file_contents.items():
+
+                if filename != 'mimetype':
+
+                    target.writestr(filename, content)
+
+        else:
+
+            for filename, content in file_contents.items():
+
+                target.writestr(filename, content)
 
 
 def _fill_p_inst_docx(source_docx, output_docx, values):
@@ -3637,6 +3779,93 @@ def _convert_p_inst_docx_to_pdf(docx_path, pdf_path, temp_dir):
     )
 
 
+def _convert_odt_to_pdf(odt_path, pdf_path, temp_dir):
+
+    """Конвертация ODT в PDF через LibreOffice (без промежуточного DOCX)."""
+
+    import shutil
+
+    import subprocess
+
+    pdf_converted = False
+
+    base_name = os.path.splitext(os.path.basename(odt_path))[0]
+
+    lo_paths = ['libreoffice', 'soffice']
+
+    lo_profile = os.path.join(temp_dir, 'lo_profile_odt')
+
+    os.makedirs(lo_profile, exist_ok=True)
+
+    lo_user_install = f'-env:UserInstallation=file:///{lo_profile.replace(os.sep, "/")}'
+
+    lo_env = _build_lo_fontconfig_env(temp_dir)
+
+    for lo_path in lo_paths:
+
+        try:
+
+            result = subprocess.run(
+
+                [
+
+                    lo_path,
+
+                    lo_user_install,
+
+                    '--headless',
+
+                    '--convert-to',
+
+                    'pdf',
+
+                    '--outdir',
+
+                    temp_dir,
+
+                    odt_path,
+
+                ],
+
+                capture_output=True,
+
+                timeout=90,
+
+                cwd=temp_dir,
+
+                check=False,
+
+                env=lo_env,
+
+            )
+
+            if result.returncode == 0:
+
+                for name in (f'{base_name}.pdf', f'{base_name.lower()}.pdf'):
+
+                    p = os.path.join(temp_dir, name)
+
+                    if os.path.exists(p) and os.path.getsize(p) > 0:
+
+                        if os.path.abspath(p) != os.path.abspath(pdf_path):
+
+                            shutil.copy2(p, pdf_path)
+
+                        pdf_converted = True
+
+                        break
+
+            if pdf_converted:
+
+                break
+
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+
+            continue
+
+    return pdf_converted and os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 0
+
+
 @app.route('/api/internal/convert-docx-to-pdf', methods=['POST'])
 
 def internal_convert_docx_to_pdf():
@@ -3713,7 +3942,7 @@ def internal_convert_docx_to_pdf():
 def generate_p_inst():
 
     """
-    Генерация чертежа П-установки из P_inst.docx с подстановкой размеров.
+    Генерация чертежа П-установки из P_inst.odt (приоритет) или P_inst.docx.
     Только для администраторов.
     POST /api/generate-p-inst
     Body: { "values": { "a": "100", "b": "200", ... } }
@@ -3737,37 +3966,59 @@ def generate_p_inst():
 
             values[key] = str(raw_values.get(key, ''))
 
-        p_inst_docx_path = os.path.join(os.path.dirname(__file__), 'P_inst.docx')
+        app_dir = os.path.dirname(__file__)
 
-        if not os.path.exists(p_inst_docx_path):
+        p_inst_odt_path = os.path.join(app_dir, P_INST_ODT_FILENAME)
 
-            return jsonify({"error": "Файл P_inst.docx не найден"}), 404
+        p_inst_docx_path = os.path.join(app_dir, P_INST_DOCX_FILENAME)
+
+        use_odt = os.path.exists(p_inst_odt_path)
+
+        if not use_odt and not os.path.exists(p_inst_docx_path):
+
+            return jsonify({"error": "Файл P_inst.odt или P_inst.docx не найден"}), 404
 
         with tempfile.TemporaryDirectory() as temp_dir:
-
-            modified_docx_path = os.path.join(temp_dir, 'P_inst_modified.docx')
 
             pdf_path = os.path.join(temp_dir, 'P_inst_modified.pdf')
 
             try:
 
-                _fill_p_inst_docx(p_inst_docx_path, modified_docx_path, values)
+                if use_odt:
+
+                    modified_path = os.path.join(temp_dir, 'P_inst_modified.odt')
+
+                    _fill_p_inst_odt(p_inst_odt_path, modified_path, values)
+
+                    pdf_ok = _convert_odt_to_pdf(modified_path, pdf_path, temp_dir)
+
+                    template_label = 'P_inst.odt'
+
+                else:
+
+                    modified_path = os.path.join(temp_dir, 'P_inst_modified.docx')
+
+                    _fill_p_inst_docx(p_inst_docx_path, modified_path, values)
+
+                    pdf_ok = _convert_p_inst_docx_to_pdf(modified_path, pdf_path, temp_dir)
+
+                    template_label = 'P_inst.docx'
 
             except Exception as e:
 
-                print(f"⚠️ Заполнение P_inst.docx: {e}")
+                print(f"⚠️ Заполнение {template_label}: {e}")
 
-                return jsonify({"error": f"Ошибка при заполнении P_inst.docx: {e}"}), 500
+                return jsonify({"error": f"Ошибка при заполнении {template_label}: {e}"}), 500
 
-            if not _convert_p_inst_docx_to_pdf(modified_docx_path, pdf_path, temp_dir):
+            if not pdf_ok:
 
-                hint = "Не удалось конвертировать P_inst.docx в PDF."
+                hint = f"Не удалось конвертировать {template_label} в PDF."
 
                 if not _gost_font_available():
 
                     hint += " Установите шрифт: sudo bash scripts/install_fonts.sh"
 
-                if not P_INST_WORD_CONVERTER_URL:
+                if not use_odt and not P_INST_WORD_CONVERTER_URL:
 
                     hint += " Для точного совпадения с Windows задайте P_INST_WORD_CONVERTER_URL."
 
