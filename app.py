@@ -3280,9 +3280,7 @@ def _strip_p_inst_txbx_backgrounds(xml_str):
 
 def _fix_p_inst_xml_for_libreoffice(xml_str):
 
-    """LibreOffice: прозрачные плейсхолдеры txbx; rot переносим в wps:bodyPr vert."""
-
-    import re
+    """LibreOffice: прозрачный фон txbx и подстановка шрифта GOST."""
 
     import sys
 
@@ -3296,97 +3294,7 @@ def _fix_p_inst_xml_for_libreoffice(xml_str):
 
         xml_str = xml_str.replace('GOST Type AU', P_INST_LINUX_FONT)
 
-    def fix_anchor(match):
-
-        block = match.group(0)
-
-        rot_m = re.search(r'<a:xfrm rot="(\d+)"', block)
-
-        if not rot_m:
-
-            return block
-
-        rot_val = rot_m.group(1)
-
-        if rot_val == '0':
-
-            return block
-
-        vert_val = P_INST_XFRM_ROT_TO_VERT.get(rot_val)
-
-        if not vert_val:
-
-            return block
-
-        wp_ext = re.search(r'<wp:extent cx="(\d+)" cy="(\d+)"/>', block)
-
-        wcx = int(wp_ext.group(1)) if wp_ext else 0
-
-        block = re.sub(r'(<a:xfrm) rot="\d+"', r'\1 rot="0"', block, count=1)
-
-        ext_m = re.search(r'<a:ext cx="(\d+)" cy="(\d+)"/>', block)
-
-        if ext_m and rot_val in ('16200000', '5400000'):
-
-            cx, cy = ext_m.group(1), ext_m.group(2)
-
-            block = block.replace(
-
-                f'<a:ext cx="{cx}" cy="{cy}"/>',
-
-                f'<a:ext cx="{cy}" cy="{cx}"/>',
-
-                1,
-
-            )
-
-        if 'wps:bodyPr' in block:
-
-            if re.search(r'vert="[^"]+"', block):
-
-                block = re.sub(
-
-                    r'(<wps:bodyPr[^>]*?)vert="[^"]+"',
-
-                    rf'\1vert="{vert_val}"',
-
-                    block,
-
-                    count=1,
-
-                )
-
-            else:
-
-                block = re.sub(
-
-                    r'(<wps:bodyPr[^>]*?)(\s*/>)',
-
-                    rf'\1 vert="{vert_val}"\2',
-
-                    block,
-
-                    count=1,
-
-                )
-
-        if rot_val == '16200000' and wcx:
-
-            block = re.sub(
-
-                r'(<wp:positionV relativeFrom="paragraph">\s*<wp:posOffset>)(-?\d+)(</wp:posOffset>)',
-
-                lambda m: f"{m.group(1)}{int(m.group(2)) + wcx}{m.group(3)}",
-
-                block,
-
-                count=1,
-
-            )
-
-        return block
-
-    return re.sub(r'<wp:anchor[^>]*>.*?</wp:anchor>', fix_anchor, xml_str, flags=re.DOTALL)
+    return xml_str
 
 
 def _fill_p_inst_docx(source_docx, output_docx, values):
