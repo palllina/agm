@@ -225,7 +225,7 @@ def _html_with_embedded_data(filename):
                 else:
                     html = extra_scripts + '\n' + html
                 from flask import Response
-                return Response(html, mimetype='text/html; charset=utf-8')
+                return Response(html, mimetype='text/html')
             except Exception:
                 pass
         return send_from_directory('.', filename)
@@ -266,7 +266,7 @@ def _html_with_embedded_data(filename):
 
     from flask import Response
 
-    return Response(html, mimetype='text/html; charset=utf-8')
+    return Response(html, mimetype='text/html')
 
 @app.route('/')
 
